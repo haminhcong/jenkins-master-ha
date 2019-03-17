@@ -161,7 +161,7 @@ get_params()
 
 generic_script_monitor()
 {
-	#echo "POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
+	echo "POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
 	if [ -f ${OCF_RESKEY_state} ]; then
 		if [ -n ${ALWAYSRUN} ]; then
 			$($SCRIPT $ARGS >/dev/null 2>&1)
