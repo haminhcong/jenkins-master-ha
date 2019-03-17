@@ -161,12 +161,7 @@ get_params()
 
 generic_script_monitor()
 {
-	echo "`date` Start monitoring $SCRIPT" >> /tmp/monitor.txt
-	echo "`date` Start monitoring $SCRIPT" >> /tmp/start.txt
-
 	if [ -f ${OCF_RESKEY_state} ]; then
-		echo "Exec monitoring script: $SCRIPT" >> /tmp/monitor.txt
-		echo "Exec monitoring script: $SCRIPT" >> /tmp/start.txt
 		if [ -n ${ALWAYSRUN} ]; then
 			$($SCRIPT $ARGS >/dev/null 2>&1)
 			if [ $? -ne 0 ]; then
@@ -225,7 +220,7 @@ generic_script_start()
 
 generic_script_stop()
 {
-	echo "`date` Service stopped" >> /tmp/start.txt
+
 	# check if the script is there
 	if [ -x "$SCRIPT" ]; then
 		COMMAND=$SCRIPT
@@ -237,14 +232,14 @@ generic_script_stop()
 	generic_script_monitor
 	retVal=$?
 	if [ $retVal -eq $OCF_SUCCESS ]; then
-		echo "`date` 2) Going to do stop script" >> /tmp/start.txt
+		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
 		# If both of these are not present, we're not supposed to run
 		if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
 			rm -f ${OCF_RESKEY_state}
 			exit $OCF_SUCCESS
 		fi
-		$($COMMAND ${STOPARG} >/dev/null 2>&1)
-		echo "STOP $COMMAND ${STOPARG}"" >>/tmp/stop.txt
+		$($COMMAND ${STOPARG:-$ARGS} >/dev/null 2>&1)
+		#echo STOP $COMMAND ${STOPARG:-$ARGS} >>/tmp/stop.txt
 		if [ $? -ne 0 ]; then
 			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 			exit $OCF_ERR_GENERIC
@@ -262,6 +257,7 @@ generic_script_stop()
 	fi
 
 }
+
 
 generic_script_validate_all()
 {
