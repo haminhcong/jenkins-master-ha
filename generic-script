@@ -191,31 +191,21 @@ generic_script_start()
 		exit $OCF_ERR_GENERIC
 	fi
 
-	generic_script_monitor
-	retVal=$?
-	if [ $retVal -eq $OCF_NOT_RUNNING ]; then
-		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
-		$($COMMAND ${STARTARGS} >/dev/null 2>&1)
-		echo $COMMAND ${STARTARGS} >> /tmp/start.txt
-		if [ $? -ne 0 ]; then
-			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
-			exit $OCF_ERR_GENERIC
-		else
-			touch ${OCF_RESKEY_state}
-			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
-			exit $OCF_SUCCESS
-		fi
-
+	#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+	$($COMMAND ${STARTARGS} >/dev/null 2>&1)
+	echo $COMMAND ${STARTARGS} >> /tmp/start.txt
+	if [ $? -ne 0 ]; then
+		ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
+		exit $OCF_ERR_GENERIC
+	else
 		touch ${OCF_RESKEY_state}
 		ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
 		exit $OCF_SUCCESS
-	elif [ $retVal -eq $OCF_SUCCESS ]; then
-		exit $OCF_SUCCESS
-	else
-		ocf_log err "$SCRIPT monitor is neither running or stopped,exiting."
-		exit $OCF_ERR_GENERIC
 	fi
 
+	touch ${OCF_RESKEY_state}
+	ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
+	exit $OCF_SUCCESS
 
 }
 
