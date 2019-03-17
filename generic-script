@@ -220,31 +220,21 @@ generic_script_stop()
 		exit $OCF_ERR_GENERIC
 	fi
 
-	generic_script_monitor
-	retVal=$?
-	if [ $retVal -eq $OCF_SUCCESS ]; then
-		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
-		# If both of these are not present, we're not supposed to run
-		if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
-			rm -f ${OCF_RESKEY_state}
-			exit $OCF_SUCCESS
-		fi
-		$($COMMAND ${STOPARGS} >/dev/null 2>&1)
-		echo STOP $COMMAND ${STOPARGS} >>/tmp/stop.txt
-		if [ $? -ne 0 ]; then
-			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
-			exit $OCF_ERR_GENERIC
-		else
-			rm -f ${OCF_RESKEY_state}
-			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
-			exit $OCF_SUCCESS
-		fi
-
-	elif [ $retVal -eq $OCF_NOT_RUNNING ]; then
+	#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+	# If both of these are not present, we're not supposed to run
+	if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
+		rm -f ${OCF_RESKEY_state}
 		exit $OCF_SUCCESS
-	else
-		ocf_log err "$SCRIPT monitor is neither running or stopped,exiting."
+	fi
+	$($COMMAND ${STOPARGS} >/dev/null 2>&1)
+	echo STOP $COMMAND ${STOPARGS} >>/tmp/stop.txt
+	if [ $? -ne 0 ]; then
+		ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 		exit $OCF_ERR_GENERIC
+	else
+		rm -f ${OCF_RESKEY_state}
+		ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
+		exit $OCF_SUCCESS
 	fi
 
 }
