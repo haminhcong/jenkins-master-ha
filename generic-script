@@ -184,7 +184,7 @@ generic_script_monitor()
 
 generic_script_start()
 {
-	#echo "1) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+	echo "Process start script" >> /tmp/start.txt
 	# check if the script is there
 	if [ -x "$SCRIPT" ]; then
 		COMMAND=$SCRIPT
