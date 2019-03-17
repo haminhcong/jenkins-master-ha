@@ -161,7 +161,9 @@ get_params()
 
 generic_script_monitor()
 {
-	#echo "POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
+	echo "Start monitoring: POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
+	echo "Start monitoring: POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/start.txt
+
 	if [ -f ${OCF_RESKEY_state} ]; then
 		if [ -n ${ALWAYSRUN} ]; then
 			$($SCRIPT $ARGS >/dev/null 2>&1)
@@ -194,9 +196,9 @@ generic_script_start()
 	generic_script_monitor
 	retVal=$?
 	if [ $retVal -eq $OCF_NOT_RUNNING ]; then
-		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+		echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
 		$($COMMAND ${STARTARGS:-$ARGS} >/dev/null 2>&1)
-		#echo $COMMAND ${STARTARGS:-$ARGS} >> /tmp/start.txt
+		echo "Start script $COMMAND ${STARTARGS:-$ARGS}" >> /tmp/start.txt
 		if [ $? -ne 0 ]; then
 			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 			exit $OCF_ERR_GENERIC
@@ -205,7 +207,7 @@ generic_script_start()
 			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
 			exit $OCF_SUCCESS
 		fi
-	
+
 		touch ${OCF_RESKEY_state}
 		ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
 		exit $OCF_SUCCESS
