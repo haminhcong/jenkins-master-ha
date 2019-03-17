@@ -161,8 +161,8 @@ get_params()
 
 generic_script_monitor()
 {
-	echo "Start monitoring: POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
-	echo "Start monitoring: POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/start.txt
+	echo "`date` Start monitoring: POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
+	echo "`date` Start monitoring: POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/start.txt
 
 	if [ -f ${OCF_RESKEY_state} ]; then
 		echo "Exec monitoring script: $SCRIPT" >> /tmp/monitor.txt
@@ -226,6 +226,7 @@ generic_script_start()
 
 generic_script_stop()
 {
+	echo "`date` Service stopped" >> /tmp/start.txt
 	# check if the script is there
 	if [ -x "$SCRIPT" ]; then
 		COMMAND=$SCRIPT
@@ -237,7 +238,7 @@ generic_script_stop()
 	generic_script_monitor
 	retVal=$?
 	if [ $retVal -eq $OCF_SUCCESS ]; then
-		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+		echo "`date` 2) Going to do stop script" >> /tmp/start.txt
 		# If both of these are not present, we're not supposed to run
 		if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
 			rm -f ${OCF_RESKEY_state}
@@ -253,7 +254,7 @@ generic_script_stop()
 			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
 			exit $OCF_SUCCESS
 		fi
-	
+
 	elif [ $retVal -eq $OCF_NOT_RUNNING ]; then
 		exit $OCF_SUCCESS
 	else
@@ -265,7 +266,7 @@ generic_script_stop()
 
 generic_script_validate_all()
 {
-	# Is the state directory writable? 
+	# Is the state directory writable?
 	state_dir=`dirname "$OCF_RESKEY_state"`
 	touch "$state_dir/$$"
 	if [ $? != 0 ]; then
