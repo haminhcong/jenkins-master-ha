@@ -226,41 +226,47 @@ generic_script_start()
 
 generic_script_stop()
 {
-	echo "`date` Service stopped" >> /tmp/start.txt
-	# check if the script is there
-	if [ -x "$SCRIPT" ]; then
-		COMMAND=$SCRIPT
-	else
-		ocf_log err "Error. Script is not executable."
-		exit $OCF_ERR_GENERIC
-	fi
-
 	generic_script_monitor
-	retVal=$?
-	if [ $retVal -eq $OCF_SUCCESS ]; then
-		echo "`date` 2) Going to do stop script" >> /tmp/start.txt
-		# If both of these are not present, we're not supposed to run
-		if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
-			rm -f ${OCF_RESKEY_state}
-			exit $OCF_SUCCESS
-		fi
-		$($COMMAND ${STOPARGS:-$ARGS} >/dev/null 2>&1)
-		#echo STOP $COMMAND ${STOPARGS:-$ARGS} >>/tmp/stop.txt
-		if [ $? -ne 0 ]; then
-			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
-			exit $OCF_ERR_GENERIC
-		else
-			rm -f ${OCF_RESKEY_state}
-			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
-			exit $OCF_SUCCESS
-		fi
+    if [ $? =  $OCF_SUCCESS ]; then
+		rm ${OCF_RESKEY_state}
+    fi
+	return $OCF_SUCCESS
 
-	elif [ $retVal -eq $OCF_NOT_RUNNING ]; then
-		exit $OCF_SUCCESS
-	else
-		ocf_log err "$SCRIPT monitor is neither running or stopped,exiting."
-		exit $OCF_ERR_GENERIC
-	fi
+	# echo "`date` Service stopped" >> /tmp/start.txt
+	# # check if the script is there
+	# if [ -x "$SCRIPT" ]; then
+	# 	COMMAND=$SCRIPT
+	# else
+	# 	ocf_log err "Error. Script is not executable."
+	# 	exit $OCF_ERR_GENERIC
+	# fi
+
+	# generic_script_monitor
+	# retVal=$?
+	# if [ $retVal -eq $OCF_SUCCESS ]; then
+	# 	echo "`date` 2) Going to do stop script" >> /tmp/start.txt
+	# 	# If both of these are not present, we're not supposed to run
+	# 	if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
+	# 		rm -f ${OCF_RESKEY_state}
+	# 		exit $OCF_SUCCESS
+	# 	fi
+	# 	$($COMMAND ${STOPARGS:-$ARGS} >/dev/null 2>&1)
+	# 	#echo STOP $COMMAND ${STOPARGS:-$ARGS} >>/tmp/stop.txt
+	# 	if [ $? -ne 0 ]; then
+	# 		ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
+	# 		exit $OCF_ERR_GENERIC
+	# 	else
+	# 		rm -f ${OCF_RESKEY_state}
+	# 		ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
+	# 		exit $OCF_SUCCESS
+	# 	fi
+
+	# elif [ $retVal -eq $OCF_NOT_RUNNING ]; then
+	# 	exit $OCF_SUCCESS
+	# else
+	# 	ocf_log err "$SCRIPT monitor is neither running or stopped,exiting."
+	# 	exit $OCF_ERR_GENERIC
+	# fi
 
 }
 
