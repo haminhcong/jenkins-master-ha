@@ -161,12 +161,11 @@ get_params()
 
 generic_script_monitor()
 {
-	#echo "POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
+	echo "Monitor started: Params: $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
 	if [ -f ${OCF_RESKEY_state} ]; then
 		if [ -n ${ALWAYSRUN} ]; then
 			$($SCRIPT $ARGS >/dev/null 2>&1)
 			if [ $? -ne 0 ]; then
-				#echo "SHIT FUCK IT FAILED" >> /tmp/monitor.txt
 				ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 				return $OCF_ERR_GENERIC
 			fi
@@ -196,7 +195,6 @@ generic_script_start()
 	if [ $retVal -eq $OCF_NOT_RUNNING ]; then
 		echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
 		$($COMMAND ${STARTARG:-$ARGS} >/dev/null 2>&1)
-		echo $COMMAND ${STARTARGS:-$ARGS} >> /tmp/start.txt
 		if [ $? -ne 0 ]; then
 			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 			exit $OCF_ERR_GENERIC
@@ -233,14 +231,13 @@ generic_script_stop()
 	generic_script_monitor
 	retVal=$?
 	if [ $retVal -eq $OCF_SUCCESS ]; then
-		echo "2) Going to do $COMMAND $STOPARG " >> /tmp/start.txt
+		echo "2) Going to do $COMMAND $STOPARG " >> /tmp/stop.txt
 		# If both of these are not present, we're not supposed to run
 		if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
 			rm -f ${OCF_RESKEY_state}
 			exit $OCF_SUCCESS
 		fi
 		$($COMMAND ${STOPARG:-$ARGS} >/dev/null 2>&1)
-		echo STOP $COMMAND ${STOPARG:-$ARGS} >>/tmp/stop.txt
 		if [ $? -ne 0 ]; then
 			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 			exit $OCF_ERR_GENERIC
