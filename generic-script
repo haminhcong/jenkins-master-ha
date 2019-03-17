@@ -1,0 +1,319 @@
+#!/bin/sh
+#
+# Resource script for generic-script umm script
+#
+# Description:  Manages generic-script as an OCF resource in
+#               an High Availability setup.
+#
+# Generic Script OCF script's Author: Russki
+# Rsync OCF script's Author: Dhairesh Oza <odhairesh@novell.com>
+# License: GNU General Public License (GPL)
+#
+#
+#	usage: $0 {start|stop|monitor|validate-all|meta-data}
+#
+#	The "start" arg starts generic-script.
+#
+#	The "stop" arg stops it.
+#
+# OCF parameters:
+# OCF_RESKEY_script
+# OCF_RESKEY_startargs
+# OCF_RESKEY_stopargs
+# OCF_RESKEY_startandstop
+# OCF_RESKEY_args
+# OCF_RESKEY_statedir
+# OCF_RESKEY_alwaysrun
+#
+##########################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
+
+USAGE="Usage: $0 {start|stop|monitor|validate-all|meta-data}";
+
+##########################################################################
+
+usage()
+{
+	echo $USAGE >&2
+}
+
+meta_data()
+{
+cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="generic-script">
+<version>1.0</version>
+<longdesc lang="en">
+This script manages generic-script script
+</longdesc>
+<shortdesc lang="en">Manages the generic-script script</shortdesc>
+
+<parameters>
+
+<parameter name="script">
+<longdesc lang="en">
+The full path to the script
+For example, "/usr/sbin/generic-script" will be run
+</longdesc>
+<shortdesc lang="en">Name of the script we will be executing</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="startargs">
+<longdesc lang="en">
+The generic-script's start parameters if needed
+For example, "--enable --fun 10"
+If it's not supplied, it will be set to nothing
+</longdesc>
+<shortdesc lang="en">Parameters we will execute on start of the generic-script</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="stopargs">
+<longdesc lang="en">
+The generic-script's stop parameters if needed
+For example, "--disable --fun 0"
+If it's not supplied, it will be set to nothing
+</longdesc>
+<shortdesc lang="en">Parameters we will execute on stop of the generic-script</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="startandstop">
+<longdesc lang="en">
+The generic-script will only execute on start by default
+If startandstop is set to "1", or stopargs is set, the script
+will be executed when service is stopped as well
+</longdesc>
+<shortdesc lang="en">Whether we execute the script when stopping the resource</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="args">
+<longdesc lang="en">
+Args that will be executed all the time if you do not need start and stop ones
+</longdesc>
+<shortdesc lang="en">Arguments that we will run all the time</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="statedir">
+<longdesc lang="en">
+You can specify where the state directory will live
+Useful if you want it to be in /dev/shm
+</longdesc>
+<shortdesc lang="en">Where the state directory is</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="alwaysrun">
+<longdesc lang="en">
+The command will be executed all the time in monitor stage
+Useful if you want this to be a healthcheck, goes nicely if you write state to /dev/shm
+</longdesc>
+<shortdesc lang="en">If you want this to run every time monitor runs</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start" timeout="20s"/>
+<action name="stop" timeout="20s"/>
+<action name="monitor" depth="0" timeout="20s" interval="60s" />
+<action name="validate-all" timeout="20s"/>
+<action name="meta-data"  timeout="5s"/>
+</actions>
+</resource-agent>
+END
+exit $OCF_SUCCESS
+}
+
+get_params()
+{
+	if [ -n "$OCF_RESKEY_script" ]; then
+		SCRIPT=${OCF_RESKEY_script}
+	else
+		ocf_log info "You need to specify which script to run"
+		return $OCF_ERR_ARGS
+	fi
+	if [ -n "$OCF_RESKEY_startargs" ]; then
+		STARTARG=${OCF_RESKEY_startargs}
+	fi
+	if [ -n "$OCF_RESKEY_stopargs" ]; then
+		STOPARG=${OCF_RESKEY_stopargs}
+	fi
+	if [ -n "$OCF_RESKEY_startandstop" ]; then
+		STARTANDSTOP=${OCF_RESKEY_startandstop}
+	fi
+	if [ -n "$OCF_RESKEY_args" ]; then
+		ARGS=${OCF_RESKEY_args}
+	fi
+	if [ -n "$OCF_RESKEY_alwaysrun" ]; then
+		ALWAYSRUN=${OCF_RESKEY_alwaysrun}
+	fi
+	#echo "Going to do $SCRIPT $STARTARG $STOPARG $STARTANDSTOP " >> /tmp/params.txt
+}
+
+generic_script_monitor()
+{
+	#echo "POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
+	if [ -f ${OCF_RESKEY_state} ]; then
+		if [ -n ${ALWAYSRUN} ]; then
+			$($SCRIPT $ARGS >/dev/null 2>&1)
+			if [ $? -ne 0 ]; then
+				#echo "SHIT FUCK IT FAILED" >> /tmp/monitor.txt
+				ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
+				return $OCF_ERR_GENERIC
+			fi
+		fi
+		return $OCF_SUCCESS
+	fi
+	if false ; then
+		return $OCF_ERR_GENERIC
+	fi
+	return $OCF_NOT_RUNNING
+
+}
+
+generic_script_start()
+{
+	#echo "1) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+	# check if the script is there
+	if [ -x "$SCRIPT" ]; then
+		COMMAND=$SCRIPT
+	else
+		ocf_log err "Error. Script is not executable."
+		exit $OCF_ERR_GENERIC
+	fi
+
+	generic_script_monitor
+	retVal=$?
+	if [ $retVal -eq $OCF_NOT_RUNNING ]; then
+		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+		$($COMMAND ${STARTARGS:-$ARGS} >/dev/null 2>&1)
+		#echo $COMMAND ${STARTARGS:-$ARGS} >> /tmp/start.txt
+		if [ $? -ne 0 ]; then
+			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
+			exit $OCF_ERR_GENERIC
+		else
+			touch ${OCF_RESKEY_state}
+			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
+			exit $OCF_SUCCESS
+		fi
+
+		touch ${OCF_RESKEY_state}
+		ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
+		exit $OCF_SUCCESS
+	elif [ $retVal -eq $OCF_SUCCESS ]; then
+		exit $OCF_SUCCESS
+	else
+		ocf_log err "$SCRIPT monitor is neither running or stopped,exiting."
+		exit $OCF_ERR_GENERIC
+	fi
+
+
+}
+
+
+generic_script_stop()
+{
+	# check if the script is there
+	if [ -x "$SCRIPT" ]; then
+		COMMAND=$SCRIPT
+	else
+		ocf_log err "Error. Script is not executable."
+		exit $OCF_ERR_GENERIC
+	fi
+
+	generic_script_monitor
+	retVal=$?
+	if [ $retVal -eq $OCF_SUCCESS ]; then
+		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+		# If both of these are not present, we're not supposed to run
+		if [[ -z $STARTANDSTOP && -z $STOPARG ]]; then
+			rm -f ${OCF_RESKEY_state}
+			exit $OCF_SUCCESS
+		fi
+		$($COMMAND ${STOPARGS:-$ARGS} >/dev/null 2>&1)
+		#echo STOP $COMMAND ${STOPARGS:-$ARGS} >>/tmp/stop.txt
+		if [ $? -ne 0 ]; then
+			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
+			exit $OCF_ERR_GENERIC
+		else
+			rm -f ${OCF_RESKEY_state}
+			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
+			exit $OCF_SUCCESS
+		fi
+	
+	elif [ $retVal -eq $OCF_NOT_RUNNING ]; then
+		exit $OCF_SUCCESS
+	else
+		ocf_log err "$SCRIPT monitor is neither running or stopped,exiting."
+		exit $OCF_ERR_GENERIC
+	fi
+
+}
+
+generic_script_validate_all()
+{
+	# Is the state directory writable? 
+	state_dir=`dirname "$OCF_RESKEY_state"`
+	touch "$state_dir/$$"
+	if [ $? != 0 ]; then
+		return $OCF_ERR_ARGS
+	fi
+	rm "$state_dir/$$"
+
+	if [ ! -n "$SCRIPT" -a ! -x "$SCRIPT" ]; then
+		ocf_log err "Binary path to script $SCRIPT does not exist."
+		exit $OCF_ERR_ARGS
+	fi
+
+	return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_state=${OCF_RESKEY_statedir:-$HA_RSCTMP}/generic-script-${OCF_RESOURCE_INSTANCE}.state}
+
+#
+# Main
+#
+
+if [ $# -ne 1 ]; then
+	usage
+	exit $OCF_ERR_ARGS
+fi
+
+case $__OCF_ACTION in
+	start)	get_params
+		generic_script_start
+		;;
+
+	stop)	get_params
+		generic_script_stop
+		;;
+
+	monitor)get_params
+		generic_script_monitor
+		;;
+
+	validate-all)	get_params
+			generic_script_validate_all
+			;;
+
+	meta-data)	meta_data
+			;;
+
+	usage)	usage
+		exit $OCF_SUCCESS
+		;;
+
+	*)	usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+

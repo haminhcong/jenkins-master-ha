@@ -1,0 +1,26 @@
+version: '2.4'
+services:
+  jenkins:
+    container_name: ${DOCKER_CONTAINER_NAME}
+    image: jenkinsci/blueocean:1.13.1
+    user: root
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+      - "50000:50000"
+    volumes:
+      - ./jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JAVA_OPTS=-Duser.timezone=Asia/Ho_Chi_Minh
+    ulimits:
+        nproc: 65535
+        nofile:
+            soft: 1048576
+            hard: 1048576
+    healthcheck:
+      start_period: ${STARTUP_TIMEOUT}s
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
