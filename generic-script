@@ -161,10 +161,12 @@ get_params()
 
 generic_script_monitor()
 {
+	#echo "POOP and $SCRIPT and $STARTARG and $STOPARG and $ARGS and $OCF_RESKEY_state" >> /tmp/monitor.txt
 	if [ -f ${OCF_RESKEY_state} ]; then
 		if [ -n ${ALWAYSRUN} ]; then
 			$($SCRIPT $ARGS >/dev/null 2>&1)
 			if [ $? -ne 0 ]; then
+				#echo "SHIT FUCK IT FAILED" >> /tmp/monitor.txt
 				ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 				return $OCF_ERR_GENERIC
 			fi
@@ -180,7 +182,7 @@ generic_script_monitor()
 
 generic_script_start()
 {
-	echo "`date` Process start script with input: COMMAND - $COMMAND : " >> /tmp/start.txt
+	#echo "1) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
 	# check if the script is there
 	if [ -x "$SCRIPT" ]; then
 		COMMAND=$SCRIPT
@@ -192,9 +194,9 @@ generic_script_start()
 	generic_script_monitor
 	retVal=$?
 	if [ $retVal -eq $OCF_NOT_RUNNING ]; then
-		echo "`date` 2) Going to do $COMMAND $STARTARG" >> /tmp/start.txt
-		$($COMMAND $STARTARG >/dev/null 2>&1)
-		echo "`date` Started script $COMMAND $STARTARG" >> /tmp/start.txt
+		#echo "2) Going to do $COMMAND $STARTARG " >> /tmp/start.txt
+		$($COMMAND ${STARTARGS:-$ARGS} >/dev/null 2>&1)
+		#echo $COMMAND ${STARTARGS:-$ARGS} >> /tmp/start.txt
 		if [ $? -ne 0 ]; then
 			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 			exit $OCF_ERR_GENERIC
@@ -203,7 +205,7 @@ generic_script_start()
 			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
 			exit $OCF_SUCCESS
 		fi
-
+	
 		touch ${OCF_RESKEY_state}
 		ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
 		exit $OCF_SUCCESS
@@ -220,7 +222,6 @@ generic_script_start()
 
 generic_script_stop()
 {
-
 	# check if the script is there
 	if [ -x "$SCRIPT" ]; then
 		COMMAND=$SCRIPT
@@ -238,8 +239,8 @@ generic_script_stop()
 			rm -f ${OCF_RESKEY_state}
 			exit $OCF_SUCCESS
 		fi
-		$($COMMAND ${STOPARG:-$ARGS} >/dev/null 2>&1)
-		#echo STOP $COMMAND ${STOPARG:-$ARGS} >>/tmp/stop.txt
+		$($COMMAND ${STOPARGS:-$ARGS} >/dev/null 2>&1)
+		#echo STOP $COMMAND ${STOPARGS:-$ARGS} >>/tmp/stop.txt
 		if [ $? -ne 0 ]; then
 			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 			exit $OCF_ERR_GENERIC
@@ -248,7 +249,7 @@ generic_script_stop()
 			ocf_log info "Executed $OCF_RESKEY_name script in the START mode."
 			exit $OCF_SUCCESS
 		fi
-
+	
 	elif [ $retVal -eq $OCF_NOT_RUNNING ]; then
 		exit $OCF_SUCCESS
 	else
@@ -258,10 +259,9 @@ generic_script_stop()
 
 }
 
-
 generic_script_validate_all()
 {
-	# Is the state directory writable?
+	# Is the state directory writable? 
 	state_dir=`dirname "$OCF_RESKEY_state"`
 	touch "$state_dir/$$"
 	if [ $? != 0 ]; then
