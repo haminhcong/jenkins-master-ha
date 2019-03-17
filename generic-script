@@ -198,9 +198,9 @@ generic_script_start()
 	generic_script_monitor
 	retVal=$?
 	if [ $retVal -eq $OCF_NOT_RUNNING ]; then
-		echo "`date` 2) Going to do $COMMAND ${STARTARGS:-$ARGS}" >> /tmp/start.txt
-		$($COMMAND ${STARTARGS:-$ARGS} >/dev/null 2>&1)
-		echo "`date` Started script $COMMAND ${STARTARGS:-$ARGS}" >> /tmp/start.txt
+		echo "`date` 2) Going to do $COMMAND $STARTARGS" >> /tmp/start.txt
+		$($COMMAND $STARTARGS >/dev/null 2>&1)
+		echo "`date` Started script $COMMAND $STARTARGS" >> /tmp/start.txt
 		if [ $? -ne 0 ]; then
 			ocf_log err "Error. $OCF_RESKEY_name script returned error $?."
 			exit $OCF_ERR_GENERIC
