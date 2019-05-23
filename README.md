@@ -62,6 +62,33 @@ pcs resource create jenkins-master \
 - Verify cluster status: `pcs status`
 - Verify jenkins-master resource `pcs resource show jenkins-master`
 
+```bash
+[root@node-1 heartbeat]# pcs status
+Cluster name: jenkins_master_cluster
+
+WARNINGS:
+Corosync and pacemaker node names do not match (IPs used in setup?)
+
+Stack: corosync
+Current DC: node-2 (version 1.1.19-8.el7_6.4-c3c624ea3d) - partition with quorum
+Last updated: Fri May 24 00:54:52 2019
+Last change: Sun Mar 17 20:40:35 2019 by root via cibadmin on node-1
+
+2 nodes configured
+1 resource configured
+
+Online: [ node-1 node-2 ]
+
+Full list of resources:
+
+ jenkins-master	(ocf::heartbeat:generic-script):	Started node-1
+
+Daemon Status:
+  corosync: active/disabled
+  pacemaker: active/disabled
+  pcsd: active/enabled
+
+```
 At this time, jenkins-master container will be created in extractly one node in cluster.
 
 ## Design cluster HA script for jenkins master single
