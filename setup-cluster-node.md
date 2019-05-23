@@ -1,4 +1,4 @@
-# Setup cluster note documents
+# Setup jenkins master high availability cluster note with PaceMaker
 
 ## Model
 
